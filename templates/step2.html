@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <div class="card-heading">
+    <div>
+      <h2>Candidate details</h2>
+      <p class="hint">Complete the information for this letter.</p>
+    </div>
+    <div id="letter-type-badge" class="type-badge"></div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group small">
+      <label for="title">Title</label>
+      <select id="title">
+        <option>Mr.</option>
+        <option>Ms.</option>
+        <option>Mrs.</option>
+        <option>Dr.</option>
+      </select>
+    </div>
+    <div class="form-group grow">
+      <label for="name">Full Name *</label>
+      <input id="name" placeholder="e.g. Arjun Sharma">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="role">Role / Designation *</label>
+      <input id="role" placeholder="e.g. Data Analyst">
+    </div>
+    <div class="form-group" data-field="location">
+      <label for="location">Location</label>
+      <input id="location" placeholder="e.g. Coimbatore">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group" data-field="joining_date">
+      <label for="joining_date" id="joining-date-label">Joining Date</label>
+      <input type="date" id="joining_date">
+    </div>
+    <div class="form-group hidden" data-field="end_date">
+      <label for="end_date">End Date</label>
+      <input type="date" id="end_date">
+    </div>
+    <div class="form-group" data-field="duration">
+      <label for="duration">Duration (if applicable)</label>
+      <input id="duration" placeholder="e.g. 3 months">
+    </div>
+  </div>
+
+  <div class="form-group" data-field="salary">
+    <label for="salary">Salary / Stipend (if applicable)</label>
+    <div class="input-with-action">
+      <input id="salary" placeholder="To be defined">
+      <button id="btn-edit-salary" class="input-edit" type="button" title="Edit salary" aria-label="Edit salary">&#9998;</button>
+    </div>
+  </div>
+
+  <div class="button-row space-between">
+    <a href="/step1" class="btn btn-ghost">Back</a>
+    <button id="btn-generate" class="btn btn-primary">Generate letter</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/step2.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: hr-agent-microsoft
+    runtime: docker
+    plan: free
+    healthCheckPath: /step1
+    envVars:
+      - key: AZURE_TENANT_ID
+        sync: false
+      - key: AZURE_CLIENT_ID
+        sync: false
+      - key: AZURE_CLIENT_SECRET
+        sync: false
+      - key: SYSTEM_SENDER_EMAIL
+        sync: false

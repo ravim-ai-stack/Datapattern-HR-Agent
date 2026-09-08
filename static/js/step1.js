@@ -1,0 +1,1 @@
+document.querySelectorAll(".letter-card").forEach((card) => card.addEventListener("click", () => { Draft.save({ letter_type: card.dataset.type, letter_name: card.dataset.name, duration: "", salary: "" }); window.location.href = "/step2"; }));

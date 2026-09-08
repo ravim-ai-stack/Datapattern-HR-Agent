@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>Send letter</h2>
+  <p class="hint">Attach the final document, review the email content, and send it to the candidate.</p>
+
+  <div id="candidate-summary" class="summary-bar"></div>
+
+  <div class="form-group">
+    <label for="attachment">Upload Final Attachment(s) (Word/PDF/JPEG) *</label>
+    <input type="file" id="attachment" accept=".docx,.pdf,.jpg,.jpeg" multiple>
+  </div>
+
+  <div class="form-group">
+    <label for="email_subject">Email Subject *</label>
+    <input id="email_subject" placeholder="Email subject">
+  </div>
+
+  <div class="form-group">
+    <label for="email_message">Mail Content <span class="edit-label">Editable</span></label>
+    <textarea id="email_message" rows="13"></textarea>
+  </div>
+
+  <div class="email-signature-preview">
+    <span>Signature logo preview</span>
+    <img src="{{ url_for('static', filename='img/datapattern-logo.png') }}" alt="DataPattern">
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="sender_email">Sender Email *</label>
+      <input type="email" id="sender_email" value="{{ sender_email }}">
+    </div>
+    <div class="form-group">
+      <label for="recipient_email">Recipient Email *</label>
+      <input type="email" id="recipient_email" placeholder="candidate@example.com">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="cc_email">CC (optional)</label>
+    <input id="cc_email">
+  </div>
+
+  <div class="button-row space-between">
+    <a href="/step3" class="btn btn-ghost">Back</a>
+    <button id="btn-send" class="btn btn-accent">Send letter email</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/step4.js') }}"></script>
+{% endblock %}
