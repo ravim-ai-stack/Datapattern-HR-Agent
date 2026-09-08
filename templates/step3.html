@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <div class="card-heading">
+    <div>
+      <h2>Letter content</h2>
+      <p class="hint">Edit the exact content that will appear in the letter.</p>
+    </div>
+    <button id="btn-preview" class="btn btn-secondary">Preview letter</button>
+  </div>
+
+  <div id="candidate-summary" class="summary-bar"></div>
+
+  <div class="form-group">
+    <label for="letter_content">Letter Content <span class="edit-label">Editable</span></label>
+    <div class="editor-tools">
+      <button id="btn-add-signature" class="btn btn-secondary" type="button">Add employee signature</button>
+      <div id="signature-snippet" class="signature-snippet" draggable="true" title="Drag into the letter content box">
+        <span id="signature-snippet-name">Employee Name</span>
+        <span>Signature</span>
+      </div>
+    </div>
+    <p class="hint editor-hint">A4 document view - the editor grows to the number of pages required by this letter, laid out the same as the Word document (including tables). Click in and edit directly.</p>
+    <div id="letter_content" class="letter-editor" contenteditable="true"></div>
+  </div>
+
+  <div class="download-panel">
+    <span>Download a copy</span>
+    <button id="btn-download" class="btn btn-secondary">Download v</button>
+    <div id="download-menu" class="download-menu hidden">
+      <button data-format="word">Word (.docx)</button>
+      <button data-format="pdf">PDF (.pdf)</button>
+      <button id="btn-download-jpeg" data-format="jpeg" class="hidden">JPEG (.jpg)</button>
+    </div>
+  </div>
+
+  <div class="button-row space-between">
+    <a href="/step2" class="btn btn-ghost">Back</a>
+    <button id="btn-continue" class="btn btn-primary">Continue to send</button>
+  </div>
+</section>
+
+<div id="preview-modal" class="modal hidden">
+  <div class="modal-content">
+    <button id="btn-close-preview" class="modal-close">x</button>
+    <div id="letter-preview" class="letter-preview"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/step3.js') }}"></script>
+{% endblock %}
