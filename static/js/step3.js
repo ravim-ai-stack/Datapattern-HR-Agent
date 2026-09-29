@@ -1,6 +1,27 @@
 const $ = (id) => document.getElementById(id);
 const draft = Draft.requireOrRedirect("/step1");
 
+// Helper to show/hide loading overlay
+function showLoading(formatName) {
+  const overlay = document.createElement("div");
+  overlay.id = "loading-overlay";
+  overlay.className = "loading-overlay";
+  overlay.innerHTML = `
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h3>Generating Document...</h3>
+      <p>Please wait while we generate your <span class="format-name">${formatName}</span> document.</p>
+      <p style="margin-top: 0.75rem; font-size: 0.85rem;">This may take up to 30 seconds for PDF files.</p>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function hideLoading() {
+  const overlay = document.getElementById("loading-overlay");
+  if (overlay) overlay.remove();
+}
+
 if (draft) {
   $("candidate-summary").textContent = [
     draft.details.letter_name,
@@ -141,35 +162,48 @@ $("preview-modal").addEventListener("click", (e) => {
 $("btn-download").addEventListener("click", () => $("download-menu").classList.toggle("hidden"));
 
 async function downloadLetter(format) {
-  await saveLetter();
-  const letterBlocks = extractLetterBlocks($("letter_content"));
-  const response = await fetch("/api/download", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ details: draft.details, letter_content: blocksToText(letterBlocks), letter_blocks: letterBlocks, format }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Unable to download the letter.");
+  const formatName = format === "pdf" ? "PDF" : format === "jpeg" ? "JPEG" : "Word";
+  
+  try {
+    // Show loading overlay
+    showLoading(formatName);
+    
+    await saveLetter();
+    
+    const letterBlocks = extractLetterBlocks($("letter_content"));
+    const response = await fetch("/api/download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ details: draft.details, letter_content: blocksToText(letterBlocks), letter_blocks: letterBlocks, format }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Unable to download the letter.");
+    }
+    
+    const file = await response.blob();
+    const extension = format === "pdf" ? ".pdf" : format === "jpeg" ? ".jpg" : ".docx";
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = (draft.filename || "letter.docx").replace(/\.docx$/i, extension);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+    
+    showToast(`${formatName} downloaded successfully!`, "success");
+  } catch (e) {
+    showToast(e.message, "error");
+  } finally {
+    // Hide loading overlay
+    hideLoading();
   }
-  const file = await response.blob();
-  const extension = format === "pdf" ? ".pdf" : format === "jpeg" ? ".jpg" : ".docx";
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(file);
-  link.download = (draft.filename || "letter.docx").replace(/\.docx$/i, extension);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(link.href);
 }
 
 document.querySelectorAll("[data-format]").forEach((button) => button.addEventListener("click", async () => {
   $("download-menu").classList.add("hidden");
-  try {
-    await downloadLetter(button.dataset.format);
-  } catch (e) {
-    showToast(e.message, "error");
-  }
+  await downloadLetter(button.dataset.format);
 }));
 
 $("btn-continue").addEventListener("click", async () => {

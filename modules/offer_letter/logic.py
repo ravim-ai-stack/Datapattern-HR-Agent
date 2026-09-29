@@ -1003,7 +1003,7 @@ def generate_letter_pdf(details, content=None, edits=None):
                  f"-env:UserInstallation=file:///{profile_dir.replace(os.sep, '/')}",
                  "--convert-to", "pdf", "--outdir", temp_dir, source],
                 capture_output=True,
-                timeout=45,
+                timeout=30,  # Reduced from 45 to 30 seconds
                 check=False,
             )
             output = os.path.splitext(source)[0] + ".pdf"
