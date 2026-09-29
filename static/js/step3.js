@@ -3,6 +3,7 @@ const draft = Draft.requireOrRedirect("/step1");
 
 // Helper to show/hide loading overlay
 function showLoading(formatName) {
+  console.log("showLoading called with format:", formatName); // Debug log
   const overlay = document.createElement("div");
   overlay.id = "loading-overlay";
   overlay.className = "loading-overlay";
@@ -15,11 +16,16 @@ function showLoading(formatName) {
     </div>
   `;
   document.body.appendChild(overlay);
+  console.log("Loading overlay added to body"); // Debug log
 }
 
 function hideLoading() {
+  console.log("hideLoading called"); // Debug log
   const overlay = document.getElementById("loading-overlay");
-  if (overlay) overlay.remove();
+  if (overlay) {
+    overlay.remove();
+    console.log("Loading overlay removed"); // Debug log
+  }
 }
 
 if (draft) {
