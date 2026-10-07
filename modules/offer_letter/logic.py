@@ -274,8 +274,13 @@ def _content_paragraphs(details):
     ]
 
 
+# Letter types whose template file isn't simply "<letter_type>.docx".
+TEMPLATE_FILENAMES = {"offer": "DataPattern Offer Letter - Master 1.docx"}
+
+
 def _template_path(details):
-    path = os.path.join(TEMPLATE_DIR, f"{details.get('letter_type', '')}.docx")
+    letter_type = details.get("letter_type", "")
+    path = os.path.join(TEMPLATE_DIR, TEMPLATE_FILENAMES.get(letter_type, f"{letter_type}.docx"))
     return path if os.path.exists(path) else ""
 
 
@@ -413,6 +418,14 @@ def _set_paragraph_text_preserving_style(paragraph, new_text):
             run.add_text(line)
 
 
+def _same_text(a, b):
+    """Compare ignoring whitespace differences. The editable panel turns a tab
+    into a space, so a literal compare would flag untouched paragraphs as
+    edited and rewrite them -- e.g. flattening the dotted blank (a tab with a
+    dot leader) in "I............, confirm" into plain spaces."""
+    return " ".join(a.split()) == " ".join(b.split())
+
+
 def _patch_paragraphs(paragraphs, edited_texts):
     """`paragraphs` are the rendered template's own (non-blank) Paragraph
     objects in order; `edited_texts` are the corresponding strings from the
@@ -421,7 +434,7 @@ def _patch_paragraphs(paragraphs, edited_texts):
     edited entries are appended as new paragraphs, and removed ones are
     cleared rather than deleted (some carry page-layout metadata)."""
     for paragraph, new_text in zip(paragraphs, edited_texts):
-        if new_text.strip() and new_text.strip() != paragraph.text.strip():
+        if new_text.strip() and not _same_text(new_text, paragraph.text):
             _set_paragraph_text_preserving_style(paragraph, new_text)
     if len(edited_texts) > len(paragraphs):
         anchor = paragraphs[-1] if paragraphs else None
@@ -443,7 +456,7 @@ def _patch_tables(tables, edited_tables):
             for cell, new_text in zip(row.cells, edited_row):
                 if not cell.paragraphs or not isinstance(new_text, str):
                     continue
-                if new_text.strip() and new_text.strip() != cell.text.strip():
+                if new_text.strip() and not _same_text(new_text, cell.text):
                     _set_paragraph_text_preserving_style(cell.paragraphs[0], new_text)
                     for extra_paragraph in cell.paragraphs[1:]:
                         for run in extra_paragraph.runs:
@@ -547,6 +560,7 @@ def _template_content(details):
         joining = _joining_text(details)
         end_date = _end_date_text(details)
         replacements = {
+            "Dear[Candidate]": f"Dear {name}", "[Candidate]": name, "[Date]": joining,
             "[Employee Name]": name, "[Candidate Name]": name,
             "[Designation]": role, "[Designation(s)]": role,
             "[Position/Role]": role, "[Candidate Address]": details.get("location", "").strip(),
@@ -704,11 +718,65 @@ def _insert_paragraph_after(paragraph):
     return Paragraph(new_p, paragraph._parent)
 
 
+def _normalize_offer_annexure_ii(source):
+    """The master offer template's Annexure II (Personal Information / IT Act
+    declaration) carries a different hand-set indent on nearly every
+    paragraph and splits its title across two. Give it one consistent layout:
+    centered title, flush-left justified body, evenly hanging a/b/c list."""
+    paragraphs = source.paragraphs
+    start = next((i for i, p in enumerate(paragraphs) if p.text.strip().upper().startswith("PERSONAL INFORMATION AS REQUIRED")), None)
+    if start is None:
+        return
+    end = next((i for i in range(start + 1, len(paragraphs)) if paragraphs[i].text.strip().upper().startswith("ANNEXURE III")), len(paragraphs))
+    for index in range(start, end):
+        paragraph = paragraphs[index]
+        text = paragraph.text.strip()
+        if not text:
+            # Empty spacer paragraphs stack unevenly with the spacing set
+            # below; drop them unless they carry a page/section break.
+            xml = paragraph._p.xml
+            if index > start and "w:br" not in xml and "w:sectPr" not in xml and "w:drawing" not in xml:
+                paragraph._p.getparent().remove(paragraph._p)
+            continue
+        fmt = paragraph.paragraph_format
+        # Drop the per-paragraph tab stops, right indents, line spacing and
+        # per-run character spacing left over from the PDF-to-Word conversion;
+        # they are what makes word gaps and line ends uneven.
+        p_pr = paragraph._p.find(qn("w:pPr"))
+        if p_pr is not None:
+            tabs = p_pr.find(qn("w:tabs"))
+            if tabs is not None and "	" not in paragraph.text:  # keep the dotted blank's tab leader
+                p_pr.remove(tabs)
+        for run in paragraph.runs:
+            r_pr = run._r.find(qn("w:rPr"))
+            if r_pr is not None:
+                for char_spacing in r_pr.findall(qn("w:spacing")):
+                    r_pr.remove(char_spacing)
+        fmt.right_indent = Inches(0)
+        fmt.line_spacing = 1.0
+        fmt.space_before = Pt(0) if index == start else Pt(8)
+        fmt.space_after = Pt(0)
+        if index == start or text.upper().startswith("ACT, 2000"):
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            fmt.left_indent = Inches(0)
+            fmt.first_line_indent = Inches(0)
+        elif paragraph.style.name == "List Paragraph":
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            fmt.left_indent = Inches(0.75)
+            fmt.first_line_indent = Inches(-0.25)
+        else:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            fmt.left_indent = Inches(0)
+            fmt.first_line_indent = Inches(0)
+
+
 def _render_source_template(details):
     path = _template_path(details)
     if not path:
         return None
     source = Document(path)
+    if details.get("letter_type") == "offer":
+        _normalize_offer_annexure_ii(source)
     for section in source.sections:
         for paragraph in section.header.paragraphs:
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -740,7 +808,8 @@ def _render_source_template(details):
     joining = _joining_text(details)
     end_date = _end_date_text(details)
     replacements = {
-        "[Employee Name]": name, "[Candidate Name]": name,
+        "Dear[Candidate]": f"Dear {name}", "[Candidate]": name, "[Date]": joining,
+            "[Employee Name]": name, "[Candidate Name]": name,
         "[Designation]": role, "[Designation(s)]": role,
         "[Position/Role]": role, "[Candidate Address]": details.get("location", "").strip(),
         "[Start Date]": joining, "[End Date]": end_date,
