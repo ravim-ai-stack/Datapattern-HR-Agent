@@ -74,6 +74,8 @@ async function generateDraft() {
   const btn = $("btn-generate");
   btn.disabled = true;
   btn.textContent = "Generating...";
+  showLoading("Generating Letter...", "Please wait while we prepare your letter.<br><br><small>This may take a few seconds.</small>");
+  let navigating = false;
 
   try {
     const res = await fetch("/api/generate-draft", {
@@ -107,10 +109,12 @@ async function generateDraft() {
       preview_html: data.preview_html,
       body_html: data.body_html,
     });
+    navigating = true;
     window.location.href = "/step3";
   } catch (_) {
     showToast("Network error while generating the letter.", "error");
   } finally {
+    if (!navigating) hideLoading();  // keep the overlay up while the next page loads
     btn.disabled = false;
     btn.textContent = "Generate letter";
   }

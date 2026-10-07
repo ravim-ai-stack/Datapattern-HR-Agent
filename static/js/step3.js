@@ -1,90 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const draft = Draft.requireOrRedirect("/step1");
 
-// Helper to show/hide loading overlay
-function showLoading(formatName) {
-  // Remove any existing overlay first
-  hideLoading();
-  
-  const overlay = document.createElement("div");
-  overlay.id = "loading-overlay";
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.85);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  `;
-  
-  const content = document.createElement("div");
-  content.style.cssText = `
-    background: white;
-    border-radius: 12px;
-    padding: 40px 50px;
-    text-align: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-    max-width: 400px;
-  `;
-  
-  const spinner = document.createElement("div");
-  spinner.style.cssText = `
-    width: 64px;
-    height: 64px;
-    border: 6px solid #eef2ff;
-    border-top-color: #1d4ed8;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 24px;
-  `;
-  
-  const heading = document.createElement("h3");
-  heading.style.cssText = `
-    margin: 0 0 12px;
-    color: #1e3a8a;
-    font-size: 20px;
-  `;
-  heading.textContent = "Generating Document...";
-  
-  const message = document.createElement("p");
-  message.style.cssText = `
-    margin: 0;
-    color: #6b7280;
-    font-size: 14px;
-    line-height: 1.5;
-  `;
-  message.innerHTML = `Please wait while we generate your <strong style="color: #f97316;">${formatName}</strong> document.<br><br><small>This may take up to 30 seconds for PDF files.</small>`;
-  
-  // Add CSS animation for spinner
-  if (!document.getElementById("loading-spinner-style")) {
-    const style = document.createElement("style");
-    style.id = "loading-spinner-style";
-    style.textContent = `
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-  
-  content.appendChild(spinner);
-  content.appendChild(heading);
-  content.appendChild(message);
-  overlay.appendChild(content);
-  document.body.appendChild(overlay);
-}
-
-function hideLoading() {
-  const overlay = document.getElementById("loading-overlay");
-  if (overlay) {
-    overlay.remove();
-  }
-}
-
 if (draft) {
   $("candidate-summary").textContent = [
     draft.details.letter_name,
@@ -229,7 +145,10 @@ async function downloadLetter(format) {
   
   try {
     // Show loading overlay
-    showLoading(formatName);
+    showLoading(
+      "Generating Document...",
+      `Please wait while we generate your <strong style="color: #f97316;">${formatName}</strong> document.<br><br><small>This may take up to 30 seconds for PDF files.</small>`
+    );
     
     await saveLetter();
     
@@ -271,9 +190,11 @@ document.querySelectorAll("[data-format]").forEach((button) => button.addEventLi
 
 $("btn-continue").addEventListener("click", async () => {
   try {
+    showLoading("Preparing to send...", "Saving your letter and getting it ready to send.<br><br><small>Please wait a moment.</small>");
     await saveLetter();
     window.location.href = "/step4";
   } catch (e) {
+    hideLoading();
     showToast(e.message, "error");
   }
 });
