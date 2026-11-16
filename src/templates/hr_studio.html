@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>HR Studio</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8"></head><body>
+<header class="app-header"><img src="{{ url_for('static', filename='img/datapattern-logo.png') }}" alt="DataPattern" class="app-logo"><h1>HR Studio</h1><p>Chat with the HR assistant</p></header>
+<main class="container studio-container"><div class="studio no-letter" id="studio">
+  <section class="studio-preview" id="studioPanel">
+    <div class="studio-bar"><span id="studioTitle">Letter preview</span><button type="button" id="studioDownload" disabled>Download PDF</button></div>
+    <div class="studio-sheet"><div id="studioPreview" class="letter-preview"></div></div>
+  </section>
+  <aside class="chat-page">
+    <div class="chat-page-header"><span>HR Studio</span><a href="/step1">&larr; Back to letter types</a></div>
+    <div class="chatbot-messages" id="hrChatMessages"><div class="chat-msg bot">Hi! I'm HR Studio. How can I help you today?</div></div>
+    <form class="chatbot-input" id="hrChatForm"><input type="text" id="hrChatInput" placeholder="Type a message..." autocomplete="off" autofocus><button type="submit">Send</button></form>
+  </aside>
+</div></main><div id="toast" class="toast hidden"></div><script src="{{ url_for('static', filename='js/common.js') }}?v=5"></script><script src="{{ url_for('static', filename='js/hr_studio.js') }}?v=4"></script></body></html>

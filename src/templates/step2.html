@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <div class="card-heading">
+    <div>
+      <h2>Candidate details</h2>
+      <p class="hint">Complete the information for this letter.</p>
+    </div>
+    <div id="letter-type-badge" class="type-badge"></div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group small">
+      <label for="title">Title</label>
+      <select id="title">
+        <option>Mr.</option>
+        <option>Ms.</option>
+        <option>Mrs.</option>
+        <option>Dr.</option>
+      </select>
+    </div>
+    <div class="form-group grow">
+      <label for="name">Full Name *</label>
+      <input id="name" placeholder="e.g. Arjun Sharma">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group" data-field="role">
+      <label for="role">Role / Designation *</label>
+      <input id="role" placeholder="e.g. Data Analyst">
+    </div>
+    <div class="form-group" data-field="location">
+      <label for="location">Location</label>
+      <input id="location" placeholder="e.g. Coimbatore">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group" data-field="joining_date">
+      <label for="joining_date" id="joining-date-label">Joining Date</label>
+      <input type="date" id="joining_date">
+    </div>
+    <div class="form-group hidden" data-field="end_date">
+      <label for="end_date">End Date</label>
+      <input type="date" id="end_date">
+    </div>
+    <div class="form-group" data-field="duration">
+      <label for="duration">Duration (if applicable)</label>
+      <input id="duration" placeholder="e.g. 3 months">
+    </div>
+  </div>
+
+  <div class="form-group" data-field="salary">
+    <label for="salary">Salary / Stipend (if applicable)</label>
+    <div class="input-with-action">
+      <input id="salary" placeholder="To be defined">
+      <button id="btn-edit-salary" class="input-edit" type="button" title="Edit salary" aria-label="Edit salary">&#9998;</button>
+    </div>
+  </div>
+
+  <div class="hidden" data-field="appraisal">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="rating">Appraisal Rating *</label>
+        <input id="rating" placeholder="e.g. 3">
+      </div>
+      <div class="form-group">
+        <label for="effective_date">Effective From *</label>
+        <input type="date" id="effective_date">
+      </div>
+    </div>
+    <p class="hint">Annexure A &mdash; enter the Per Month and Per Annum amounts (INR). Per Annum and the totals fill in automatically; you can overwrite any of them.</p>
+    <div class="form-row"><div class="form-group"><label>Component</label></div><div class="form-group"><label>Per Month *</label></div><div class="form-group"><label>Per Annum *</label></div></div>
+    <div class="form-row"><div class="form-group"><input value="Basic" disabled aria-label="Basic"></div><div class="form-group"><input id="basic_month" inputmode="decimal" data-annex="basic" aria-label="Basic per month"></div><div class="form-group"><input id="basic_year" inputmode="decimal" data-annex="basic" aria-label="Basic per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="HRA" disabled aria-label="HRA"></div><div class="form-group"><input id="hra_month" inputmode="decimal" data-annex="hra" aria-label="HRA per month"></div><div class="form-group"><input id="hra_year" inputmode="decimal" data-annex="hra" aria-label="HRA per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Conveyance" disabled aria-label="Conveyance"></div><div class="form-group"><input id="conveyance_month" inputmode="decimal" data-annex="conveyance" aria-label="Conveyance per month"></div><div class="form-group"><input id="conveyance_year" inputmode="decimal" data-annex="conveyance" aria-label="Conveyance per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Medical Allowance" disabled aria-label="Medical Allowance"></div><div class="form-group"><input id="medical_allowance_month" inputmode="decimal" data-annex="medical_allowance" aria-label="Medical Allowance per month"></div><div class="form-group"><input id="medical_allowance_year" inputmode="decimal" data-annex="medical_allowance" aria-label="Medical Allowance per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Special Allowance" disabled aria-label="Special Allowance"></div><div class="form-group"><input id="special_allowance_month" inputmode="decimal" data-annex="special_allowance" aria-label="Special Allowance per month"></div><div class="form-group"><input id="special_allowance_year" inputmode="decimal" data-annex="special_allowance" aria-label="Special Allowance per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Total Gross Salary" disabled aria-label="Total Gross Salary"></div><div class="form-group"><input id="gross_month" inputmode="decimal" data-annex="gross" aria-label="Total Gross Salary per month"></div><div class="form-group"><input id="gross_year" inputmode="decimal" data-annex="gross" aria-label="Total Gross Salary per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Employer PF Contribution" disabled aria-label="Employer PF Contribution"></div><div class="form-group"><input id="pf_month" inputmode="decimal" data-annex="pf" aria-label="Employer PF Contribution per month"></div><div class="form-group"><input id="pf_year" inputmode="decimal" data-annex="pf" aria-label="Employer PF Contribution per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Medical Insurance" disabled aria-label="Medical Insurance"></div><div class="form-group"><input id="medical_insurance_month" inputmode="decimal" data-annex="medical_insurance" aria-label="Medical Insurance per month"></div><div class="form-group"><input id="medical_insurance_year" inputmode="decimal" data-annex="medical_insurance" aria-label="Medical Insurance per annum"></div></div>
+    <div class="form-row"><div class="form-group"><input value="Total CTC" disabled aria-label="Total CTC"></div><div class="form-group"><input id="ctc_month" inputmode="decimal" data-annex="ctc" aria-label="Total CTC per month"></div><div class="form-group"><input id="ctc_year" inputmode="decimal" data-annex="ctc" aria-label="Total CTC per annum"></div></div>
+  </div>
+
+  <div class="button-row space-between">
+    <a href="/step1" class="btn btn-ghost">Back</a>
+    <button id="btn-generate" class="btn btn-primary">Generate letter</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/step2.js') }}?v=6"></script>
+{% endblock %}

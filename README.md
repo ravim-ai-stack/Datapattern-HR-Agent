@@ -50,22 +50,24 @@ The module is powered by the **Microsoft Graph API** using an **Azure Active Dir
 Browser (HTML/CSS/JS)
         │  fetch() calls
         ▼
-Flask backend (app.py)
+main.py  (Flask app, error handlers)
         │
-        └── /api/generate-draft, /api/download/<id>, /api/send-email
-                    │
-                    ▼
-            modules/offer_letter/
-                    ├── logic.py      (DOCX template filling)
-                    ├── mailer.py     (Graph email dispatch)
-                    └── email_template.py
-
-Powered by ──► core/
-                    ├── graph_auth.py   (MSAL token acquisition via Azure AD)
-                    └── graph_api.py    (Unified GET / POST / PUT wrappers for Graph API)
+        ▼
+src/routes/         HTTP layer: request parsing and responses only
+        │
+        ▼
+src/services/       Business logic: drafts, documents, previews, exports, email
+        │
+        ▼
+src/repositories/   Data access: letter templates on disk, outgoing mail
+        │
+        ▼
+src/database/       Microsoft Graph connection (Singleton, token caching)
 ```
 
-**Authentication Flow:** Azure AD Client Credentials → MSAL → Bearer Token → Microsoft Graph API v1.0
+Shared by every layer: `src/settings` (env config), `src/constants`, `src/utils` (logger, `AppException`, error codes and mappers, validators).
+
+**Authentication Flow:** Azure AD Client Credentials → Bearer Token → Microsoft Graph API v1.0
 
 ---
 
@@ -74,32 +76,53 @@ Powered by ──► core/
 ```
 HR-Agent-Microsoft/
 │
-├── app.py                          # Flask entry point & API routes
-├── requirements.txt                # Python dependencies
-├── .env                            # Environment variables (NOT committed to Git)
-├── .gitignore
+├── main.py                          # Application entry point (Flask app factory)
 │
-├── templates/
-│   └── index.html                  # Frontend page (3-step workflow)
+├── src/
+│   ├── routes/                      # HTTP layer
+│   │   ├── page_routes.py           #   /, /step1 .. /step4 pages
+│   │   ├── letter_routes.py         #   /api/generate-draft, /update-draft, /download
+│   │   └── email_routes.py          #   /api/send-email
+│   │
+│   ├── services/                    # Business logic
+│   │   ├── draft_service.py         #   create / update drafts, build downloads
+│   │   ├── letter_service.py        #   filled template text, blocks, validation
+│   │   ├── document_service.py      #   .docx fill, footer, layout fixes, edit patching
+│   │   ├── preview_service.py       #   HTML previews
+│   │   ├── export_service.py        #   Word / PDF / JPEG output
+│   │   ├── certificate_service.py   #   internship certificate image
+│   │   └── email_service.py         #   email bodies + dispatch via Graph
+│   │
+│   ├── repositories/                # Data access
+│   │   ├── template_repository.py   #   letter templates (src/static/letter_templates)
+│   │   └── mail_repository.py       #   Graph sendMail + inline logo
+│   │
+│   ├── database/
+│   │   └── database.py              # Microsoft Graph connection -- Singleton
+│   │
+│   ├── utils/
+│   │   ├── logger.py                # Centralized logger
+│   │   ├── custom_app_exception.py  # AppException base class
+│   │   ├── error_codes.py           # Error code constants
+│   │   ├── error_mappers.py         # Error code -> HTTP status + JSON body
+│   │   ├── validators.py            # Shared request validation
+│   │   ├── fonts.py                 # Pillow font loading
+│   │   └── letter_text.py           # Small text helpers
+│   │
+│   ├── settings/
+│   │   └── settings.py              # Pydantic BaseSettings + load_dotenv()
+│   │
+│   ├── constants/
+│   │   └── constants.py             # Status codes, letter types, layout constants
+│   │
+│   ├── templates/                   # Jinja pages (step1 .. step4)
+│   └── static/                      # css, js, img, letter_templates/*.docx
 │
-├── static/
-│   ├── css/
-│   │   └── style.css               # Basic color-scheme styling
-│   └── js/
-│       └── app.js                  # Frontend logic (fetch calls to the API)
-│
-├── core/
-│   ├── __init__.py
-│   ├── graph_auth.py               # Azure AD / MSAL token handler
-│   └── graph_api.py                # Graph API GET / POST / PUT wrappers
-│
-└── modules/
-    └── offer_letter/
-        ├── __init__.py
-        ├── logic.py                # DOCX template fill & edit logic
-        ├── mailer.py               # Graph sendMail for offer dispatch
-        ├── email_template.py       # HTML & plain-text email builders
-        └── DataPattern Offer Letter_sample.docx  # Base DOCX template
+├── .env                             # Environment variables (never commit)
+├── .env.example                     # Template showing required keys
+├── requirements.txt
+├── Dockerfile / render.yaml / vercel.json
+└── README.md
 ```
 
 ---
@@ -200,7 +223,7 @@ This installs:
 
 ### Step 1 — Create the `.env` File
 
-Create a file named `.env` in the **root** of the project (same level as `app.py`):
+Create a file named `.env` in the **root** of the project (same level as `main.py`):
 
 ```bash
 # On Windows PowerShell:
@@ -231,7 +254,6 @@ SYSTEM_SENDER_EMAIL="hr@yourdomain.com"
 
 Ensure the offer letter template file exists at:
 ```
-modules/offer_letter/DataPattern Offer Letter_sample.docx
 ```
 
 The template must contain these placeholder tokens in its text:
@@ -254,7 +276,7 @@ The template must contain these placeholder tokens in its text:
 Once configured, start the Flask app with:
 
 ```bash
-python app.py
+python main.py
 ```
 
 The app will be available at:
@@ -325,7 +347,6 @@ The Offer Letter module is a **3-step tabbed workflow**.
 - Go to Azure Portal → App → API Permissions → Grant admin consent
 
 ### ❌ `Template file not found`
-- Ensure `modules/offer_letter/DataPattern Offer Letter_sample.docx` exists
 - Do not rename or move the template file
 
 ### ❌ `Invalid recipient email address format`
